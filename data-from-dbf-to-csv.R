@@ -102,14 +102,75 @@ rm(list = ls())
 # Working with the mean data...
 mean <- read.csv("~/soil-moisture/ecoregions-data/level3-mean.csv", header = TRUE, row.names = 1, sep = ",", dec = ".")
 
+# Reformat column names of mean data
+for (i in (1:ncol(mean))) {
+  name <- colnames(mean)[i]
+  colnames(mean)[i] <- paste("M", substr(name, 2, 11), sep = "")
+}
+
+# Lets get rid of some of those decimal places
 mean <- as.matrix(mean)
 mean <- round(mean, 1)
 
 # Working with the standard deviation data...
 sd <- read.csv("~/soil-moisture/ecoregions-data/level3-sd.csv", header = TRUE, row.names = 1, sep = ",", dec = ".")
 
+# Reformat column names of standard deviation data
+for (i in (1:ncol(sd))) {
+  name <- colnames(sd)[i]
+  colnames(sd)[i] <- paste("SD", substr(name, 2, 11), sep = "")
+}
+
+# Lets get rid of some of those decimal places
 sd <- as.matrix(sd)
 sd <- round(sd, 1)
+
+# Working with second half of data from a CSV file
+recent.means <- read.csv("~/soil-moisture/ecoregions-data/incomplete-data/SM_Mean_eco_L3.csv")
+recent.sd <- read.csv("~/soil-moisture/ecoregions-data/incomplete-data/SM_SD_eco_L3.csv")
+
+# Get those row names sorted out
+row.names(recent.means) <- recent.means$X
+recent.means <- recent.means[ , 2:ncol(recent.means)]
+
+row.names(recent.sd) <- recent.sd$X
+recent.sd <- recent.sd[ , 2:ncol(recent.sd)]
+
+# Reformat column names of recent mean data
+for (i in (1:ncol(recent.means))) {
+  name <- colnames(recent.means)[i]
+  colnames(recent.means)[i] <- paste("M", substr(name, 2, 5), ".", substr(name, 6, 7), ".", substr(name, 8, 9), sep = "")
+}
+
+# Lets get rid of some of those decimal places
+recent.means <- as.matrix(recent.means)
+recent.means <- round(recent.means, 1)
+
+# Reformat column names of recent standard deviation data
+for (i in (1:ncol(recent.sd))) {
+  name <- colnames(recent.sd)[i]
+  colnames(recent.sd)[i] <- paste("SD", substr(name, 2, 5), ".", substr(name, 6, 7), ".", substr(name, 8, 9), sep = "")
+}
+
+# Lets get rid of some of those decimal places
+recent.sd <- as.matrix(recent.sd)
+recent.sd <- round(recent.sd, 1)
+
+# One minor tweak so the merge goes smoothly...
+rownames(mean)[76] <- c("Southern Texas Plains/Interior Plains and Hills with Xerophytic Shrub and Oak Forest")
+
+rownames(sd)[76] <- c("Southern Texas Plains/Interior Plains and Hills with Xerophytic Shrub and Oak Forest")
+
+# Great! Now lets finally merge this stuff and get our output dataset
+mean <- as.data.frame(mean)
+recent.means <- as.data.frame(recent.means)
+
+sd <- as.data.frame(sd)
+recent.sd <- as.data.frame(recent.sd)
+
+# AND THE MERGE!
+level3.mean <- merge(mean, recent.means, by = "row.names")
+level3.sd <- merge(sd, recent.sd, by = "row.names")
 
 # Recreate the newly rounded CSV files
 write.csv(mean, "~/soil-moisture/ecoregions-data/level3-mean.csv")
