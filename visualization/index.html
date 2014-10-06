@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Soil Moisture</title>
+		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+	</head>
+	
+	<body>
+		<script type="text/javascript">
+			
+			d3.select("body")
+				.append("p")
+				.text("Check out the really cool data in the console");
+			
+			d3.csv("level3-mean.csv", function(data) {
+				console.log(data);
+			});
+
+			//Width and height
+			var w = 500;
+			var h = 300;
+			
+			var color = d3.scale.quantize()
+                    .range(["rgb(237,248,233)", "rgb(186,228,179)",
+					"rgb(116,196,118)", "rgb(49,163,84)","rgb(0,109,44)"]);
+			
+			//Define projection
+			var projection = d3.geo.albersUsa()
+								.translate([w/2, h/2])
+								.scale([500]);
+
+			//Define default path generator
+			var path = d3.geo.path()
+						.projection(projection);
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h)
+						.style("fill", "green");
+
+			//Load in GeoJSON data
+			d3.json("level3-ecoregions.json", function(json) {
+				
+				//Bind data and create one path per GeoJSON feature
+				svg.selectAll("path")
+				   .data(json.features)
+				   .enter()
+				   .append("path")
+				   .attr("d", path);
+		
+			});
+			
+			</script>
+	</body>
+</html>
