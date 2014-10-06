@@ -110,8 +110,8 @@ for (i in (1:ncol(mean))) {
 
 # Lets get rid of some of those decimal places
 mean <- as.matrix(mean)
-mean <- round(mean, 2) 
-mean <- mean %/% 10
+mean <- round(mean, 1) * .1
+
 
 # Working with the standard deviation data...
 sd <- read.csv("~/soil-moisture/ecoregions-data/level3-sd.csv", header = TRUE, row.names = 1, sep = ",", dec = ".")
@@ -123,9 +123,8 @@ for (i in (1:ncol(sd))) {
 }
 
 # Lets get rid of some of those decimal places
-sd <- as.matrix(sd)
-sd <- round(sd, 2) 
-sd <- sd %/% 10
+sd <- as.matrix(sd) 
+sd <- round(sd, 1) * .1
 
 # Working with second half of data from a CSV file
 recent.means <- read.csv("~/soil-moisture/ecoregions-data/incomplete-data/SM_Mean_eco_L3.csv")
@@ -146,8 +145,7 @@ for (i in (1:ncol(recent.means))) {
 
 # Lets get rid of some of those decimal places
 recent.means <- as.matrix(recent.means)
-recent.means <- round(recent.means, 2) 
-recent.means <- recent.means %/% 10
+recent.means <- round(recent.means, 1) * .1
 
 
 # Reformat column names of recent standard deviation data
@@ -157,9 +155,8 @@ for (i in (1:ncol(recent.sd))) {
 }
 
 # Lets get rid of some of those decimal places
-recent.sd <- as.matrix(recent.sd)
-recent.sd <- round(recent.sd, 2) 
-recent.sd <- recent.sd %/% 10
+recent.sd <- as.matrix(recent.sd) 
+recent.sd <- round(recent.sd, 1) * .1
 
 # One minor tweak so the merge goes smoothly...
 rownames(mean)[76] <- c("Southern Texas Plains/Interior Plains and Hills with Xerophytic Shrub and Oak Forest")
@@ -180,3 +177,18 @@ level3.sd <- merge(sd, recent.sd, by = "row.names")
 # Recreate the newly rounded CSV files
 write.csv(mean, "~/soil-moisture/ecoregions-data/level3-mean.csv")
 write.csv(sd, "~/soil-moisture/ecoregions-data/level3-sd.csv")
+
+# An added section to reformat column names into something a little more useful
+rm(list = ls())
+
+mean <- read.csv("~/soil-moisture/ecoregions-data/level3-mean.csv")
+
+colnames(mean)[1] <- "Ecoregion"
+for (i in (2:ncol(mean))) {
+  date <- colnames(mean)[i]
+  date <- as.Date(substr(date, 2, 11), "%Y.%m.%d")
+  date <- format.Date(date, "%b-%d-%Y")
+  colnames(mean)[i] <- date
+}
+
+write.csv(mean, "~/soil-moisture/ecoregions-data/level3-mean.csv")
