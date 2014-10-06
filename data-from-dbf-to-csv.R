@@ -110,7 +110,8 @@ for (i in (1:ncol(mean))) {
 
 # Lets get rid of some of those decimal places
 mean <- as.matrix(mean)
-mean <- round(mean, 1)
+mean <- round(mean, 2) 
+mean <- mean %/% 10
 
 # Working with the standard deviation data...
 sd <- read.csv("~/soil-moisture/ecoregions-data/level3-sd.csv", header = TRUE, row.names = 1, sep = ",", dec = ".")
@@ -123,7 +124,8 @@ for (i in (1:ncol(sd))) {
 
 # Lets get rid of some of those decimal places
 sd <- as.matrix(sd)
-sd <- round(sd, 1)
+sd <- round(sd, 2) 
+sd <- sd %/% 10
 
 # Working with second half of data from a CSV file
 recent.means <- read.csv("~/soil-moisture/ecoregions-data/incomplete-data/SM_Mean_eco_L3.csv")
@@ -144,7 +146,9 @@ for (i in (1:ncol(recent.means))) {
 
 # Lets get rid of some of those decimal places
 recent.means <- as.matrix(recent.means)
-recent.means <- round(recent.means, 1)
+recent.means <- round(recent.means, 2) 
+recent.means <- recent.means %/% 10
+
 
 # Reformat column names of recent standard deviation data
 for (i in (1:ncol(recent.sd))) {
@@ -154,7 +158,8 @@ for (i in (1:ncol(recent.sd))) {
 
 # Lets get rid of some of those decimal places
 recent.sd <- as.matrix(recent.sd)
-recent.sd <- round(recent.sd, 1)
+recent.sd <- round(recent.sd, 2) 
+recent.sd <- recent.sd %/% 10
 
 # One minor tweak so the merge goes smoothly...
 rownames(mean)[76] <- c("Southern Texas Plains/Interior Plains and Hills with Xerophytic Shrub and Oak Forest")
@@ -163,10 +168,10 @@ rownames(sd)[76] <- c("Southern Texas Plains/Interior Plains and Hills with Xero
 
 # Great! Now lets finally merge this stuff and get our output dataset
 mean <- as.data.frame(mean)
-recent.means <- as.data.frame(recent.means)
+recent.means <- as.data.frame(recent.means, header = TRUE)
 
 sd <- as.data.frame(sd)
-recent.sd <- as.data.frame(recent.sd)
+recent.sd <- as.data.frame(recent.sd, header = TRUE)
 
 # AND THE MERGE!
 level3.mean <- merge(mean, recent.means, by = "row.names")
