@@ -187,8 +187,11 @@ colnames(mean)[1] <- "Ecoregion"
 for (i in (2:ncol(mean))) {
   date <- colnames(mean)[i]
   date <- as.Date(substr(date, 2, 11), "%Y.%m.%d")
-  date <- format.Date(date, "%b-%d-%Y")
+  date <- format.Date(date, "%b%d%Y")
   colnames(mean)[i] <- date
 }
 
-write.csv(mean, "~/soil-moisture/ecoregions-data/level3-mean.csv")
+row.names(mean) <- mean$Ecoregion
+mean <- mean[2:ncol(mean)]
+
+write.csv(mean, "~/soil-moisture/ecoregions-data/level3-mean.csv", row.names = TRUE)

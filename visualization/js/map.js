@@ -1,42 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<title>Soil Moisture</title>
-		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-		<script src="js/jquery-2.1.1.min.js"></script>
-		<script src="js/jquery-ui.min.js"></script>
-		<link rel="stylesheet" href="css/jquery-ui.min.css">
-	</head>
-	
-	<body>
-		<div id='map'></div>
-		<div id='slider'></div>
+///////////////////////*
 
-<script type="text/javascript">
+MAP
 
-///////////////////////////
-//------ SLIDER ---------//
-///////////////////////////
-$(document).ready(function() {
-	$('#slider').slider().width(600).height(10);
-});
-
-var sliderDate = $('slider').slider().value;
-
-
-///////////////////////////
-//-------- MAP ----------//
-///////////////////////////
+//////////////////////*/
 
 //Width and height
-var w = 600;
-var h = 400;
+var w = 800;
+var h = 600;
 
 //Define projection
 var projection = d3.geo.albersUsa()
 					.translate([w/2, h/2])
-					.scale([750]);
+					.scale([1000]);
 
 
 //Define default path generator
@@ -53,18 +28,18 @@ var color = d3.scale.linear().domain([0,25])
 			.interpolate(d3.interpolateHcl);
 
 //Create SVG element
-var svg = d3.select("#map")
+var svg = d3.select("body")
 			.append("svg")
 			.attr("width", w)
 			.attr("height", h);
 
 //Our soil moisture data
-data = d3.csv("level3-mean.csv", function(data) {
+data = d3.csv("/visualization/level3-mean.csv", function(data) {
 
 	console.log(data);
 
 	//Load in GeoJSON data
-	d3.json("level3-ecoregions.json", function(json) {
+	d3.json("/visualization/level3-ecoregions.json", function(json) {
 
 		//Merge soil moisture data and GeoJSON
 		//Loop through once for each ecoregion
@@ -110,6 +85,3 @@ data = d3.csv("level3-mean.csv", function(data) {
 			.style("stroke-width", "0.5");
 	});
 });
-		</script>
-	</body>
-	</html>
