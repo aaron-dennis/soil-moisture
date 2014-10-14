@@ -12,22 +12,22 @@
 	<body>
 		<div id='map'></div>
 		<div id='slider'></div>
+		<div id='date'>
+			<p>Today</p>
+		</div>
 
 <script type="text/javascript">
 
-///////////////////////////
-//------ SLIDER ---------//
-///////////////////////////
+//Initialize slider
 $(document).ready(function() {
-	$('#slider').slider().width(600).height(10);
+	$('#slider').slider({value: 1000}).width(600).height(10);
+	
 });
 
-var sliderDate = $('slider').slider().value;
+//Setting map properties
 
-
-///////////////////////////
-//-------- MAP ----------//
-///////////////////////////
+//Define date format
+var format = d3.time.format("%b%d%Y");
 
 //Width and height
 var w = 600;
@@ -44,11 +44,11 @@ var path = d3.geo.path()
 				.projection(projection);
 
 //Colors for high and low
-var dryColor = "#fbf3cb";
-var wetColor = "#3dc1eb";
+var dryColor = "#FFF2D8";
+var wetColor = "#0095BA";
 
 //Scale takes data values as input and returns color
-var color = d3.scale.linear().domain([0,25])
+var color = d3.scale.linear().domain([0,26])
 			.range([dryColor, wetColor])
 			.interpolate(d3.interpolateHcl);
 
@@ -58,58 +58,77 @@ var svg = d3.select("#map")
 			.attr("width", w)
 			.attr("height", h);
 
+			
 //Our soil moisture data
 data = d3.csv("level3-mean.csv", function(data) {
 
 	console.log(data);
-
+	
 	//Load in GeoJSON data
-	d3.json("level3-ecoregions.json", function(json) {
-
-		//Merge soil moisture data and GeoJSON
-		//Loop through once for each ecoregion
-		for (var i = 0; i < data.length; i++) {
-
-			//Grab ecoregion name
-			var dataEcoregion = data[i].Ecoregion;
-
-			//Grab data value and convert from string
-			var dataValue = parseFloat(data[i].Aug012008);
-
-			//Find corresponding ecoregion in GeoJSON
+	json = d3.json("level3-ecoregions.json", function(json) {
+	
+			sliderValue = 100;
+		
+			//Find corresponding ecoregion within GeoJSON
 			for (var j = 0; j < json.features.length; j++) {
-
-				var jsonEcoregion = json.features[j].properties.US_L3NAME;
-
-				if (dataEcoregion == jsonEcoregion) {
+				var jsonEcoregion = json.features[j].properties.NA_L3NAME;
+				json.features[j].properties.value = parseFloat(data[sliderValue][jsonEcoregion]);
+			};
+			
+			//Bind data and create one path per GeoJSON feature
+			svg.selectAll("path")
+				.data(json.features)
+				.enter()
+				.append("path")
+				.attr("d", path)
+				.style("fill", function(d) {
+					var value = d.properties.value;
+							if (value) {
+								return color(value);
+							} else {
+								return "#ccc";
+							}
+				})
+				.style("stroke", "white")
+				.style("stroke-width", "0.5");
+			
+			function refreshMap(sliderValue) {
 				
-					//Copy data value into JSON
-					json.features[j].properties.Aug012008 = dataValue;
-
-					//Stop looking through GeoJSON
-					break;
-				}
-			}
-		}
-
-		//Bind data and create one path per GeoJSON feature
-		svg.selectAll("path")
-			.data(json.features)
-			.enter()
-			.append("path")
-			.attr("d", path)
-			.style("fill", function(d) {
-				var value = d.properties.Aug012008;
+				//Find corresponding ecoregion within GeoJSON
+				for (var j = 0; j < json.features.length; j++) {
+					var jsonEcoregion = json.features[j].properties.NA_L3NAME;
+					json.features[j].properties.value = parseFloat(data[sliderValue][jsonEcoregion]);
+				};
+				
+				svg.selectAll("path")
+					.data(json.features)
+					.style("fill", function(d) {
+						var value = d.properties.value;
 						if (value) {
 							return color(value);
-						} else {
-							return "#ccc";
-						}
-			})
-			.style("stroke", "white")
-			.style("stroke-width", "0.5");
+							} else {
+								return "#ccc";
+							}
+						});
+			};
+	
+	$(function() {
+		$('#slider').slider({ 	min: 0,
+								max: data.length,
+								slide: function( event, ui ) {
+									var sliderValue = ui.value;
+									refreshMap(sliderValue);
+									
+								} 
+							});
+						});
+	
 	});
 });
+
+
+
+
 		</script>
 	</body>
 	</html>

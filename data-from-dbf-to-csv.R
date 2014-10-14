@@ -181,6 +181,9 @@ write.csv(sd, "~/soil-moisture/ecoregions-data/level3-sd.csv")
 # An added section to reformat column names into something a little more useful
 rm(list = ls())
 
+
+# mean stuff
+
 mean <- read.csv("~/soil-moisture/ecoregions-data/level3-mean.csv")
 
 colnames(mean)[1] <- "Ecoregion"
@@ -194,4 +197,23 @@ for (i in (2:ncol(mean))) {
 row.names(mean) <- mean$Ecoregion
 mean <- mean[2:ncol(mean)]
 
+mean <- as.matrix(t(mean))
+
 write.csv(mean, "~/soil-moisture/ecoregions-data/level3-mean.csv", row.names = TRUE)
+
+# sd stuff
+
+sd <- read.csv("~/soil-moisture/ecoregions-data/level3-sd.csv")
+
+colnames(sd)[1] <- "Ecoregion"
+for (i in (2:ncol(sd))) {
+  date <- colnames(sd)[i]
+  date <- as.Date(substr(date, 2, 11), "%Y.%m.%d")
+  date <- format.Date(date, "%b%d%Y")
+  colnames(sd)[i] <- date
+}
+
+row.names(sd) <- sd$Ecoregion
+sd <- sd[2:ncol(sd)]
+
+write.csv(mean, "~/soil-moisture/ecoregions-data/level3-sd.csv", row.names = TRUE)
