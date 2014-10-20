@@ -121,7 +121,7 @@ var dryColor = "#F4F2CF";
 var wetColor = "#0095BA";
 
 //Scale takes data values as input and returns color
-var color = d3.scale.linear().domain([3,26])
+var color = d3.scale.linear().domain([10,18])
 			.range([dryColor, wetColor])
 			.interpolate(d3.interpolateHcl);
 
@@ -229,34 +229,66 @@ var svgTerrain = d3.select("#terrain")
 			bounds: {min: 0, max: data.length},
 			defaultValues:{min: 365, max: 395},
 			range: {min: 30, max: 365},
+			step: 1,
 			valueLabels: "change",
 			durationIn: 150,
 			durationOut: 150
 		});
 		
-		var bounds = $("#rangeSlider").rangeSlider("option", "bounds");
-		console.log(bounds);
+		// Utilize rangeSlider to dynamically calculate averages and then recolor map
 		
-		function calculateMean() {
-			var min = bounds.min;
-			var max = bounds.max;
-		
-			// Looping through each ecoregion...
-			for (var j = 0; j < json.features.length; j++) {
-				var jsonEcoregion = json.features[j].properties.NA_L3NAME;
+		function calculateMeans() {
 			
-				// Do the following for each ecoregion...
-				data[i][jsonEcoregion]
+			var rangeValues = $("#rangeSlider").rangeSlider("values");
+			
+			console.log(rangeValues);
+			
+			var min = rangeValues.min;
+			var max = rangeValues.max;
+				
+			// Looping through each ecoregion...
+			for(var j = 0; j < json.features.length; j++) {
+				var jsonEcoregion = json.features[j].properties.NA_L3NAME;
+				
+				var sum = 0;
+				
+				for(var i = min; i <= max; i++) {
+				
+					// Do the following for each ecoregion...
+					sum += parseFloat(data[i][jsonEcoregion]);
+					
+				}; // END looping through each day in rangeSlider bounds
+				
+				var mean = sum / (max - min);
+				console.log(mean);
 				
 				// Assign a new value for each ecoregion
-				json.features[j].properties.value = parseFloat(data[sliderValue][jsonEcoregion]);
-			
-				
-				
+				json.features[j].properties.value = mean;
 				
 			}; // END looping through each ecoregion
 			
-		}; //END calculate mean function
+		}; // END calculate calculateMeans function
+		
+		// Define function to recolor ecoregions based on json.features.properties.value
+		function recolorMap () {
+			svgEcoregions.selectAll("path")
+					.data(json.features)
+					.transition()
+					.duration(30)
+					.style("fill", function(d) {
+						var value = d.properties.value;
+						if (value) {
+							return color(value);
+							} else {
+								return "#ccc";
+							}
+						});
+		}; // END recolorMap function
+		
+		$("#rangeSlider").bind("valuesChanging", function(e){
+  			calculateMeans();
+			recolorMap();
+		});
 		
 	}); // END level 3 ecoregion boundaries
 	
@@ -275,6 +307,17 @@ d3.json("land.json", function(error, land) {
 		.datum(topojson.feature(land, land.objects.land))
 		.attr("id", "land")
 		.attr("d", path);
+	
+	// Applying a multiply filter TODO
+	/*
+	var filter = defs.append("filter")
+		.attr("id", "Multiply");
+	
+	filter.append("feBlend")
+	.attr("mode", "multiply")
+		.attr("in2", "BackgroundImage")
+		.attr("in", "SourceGraphic");
+	//*/
 
 	//Identify a clipping path
 	svgTerrain.append("clipPath")
