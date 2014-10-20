@@ -2,24 +2,37 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		
 		<title>Soil Moisture</title>
+		
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		<script src="http://d3js.org/d3.geo.tile.v0.min.js"></script>
 		<script src="http://d3js.org/topojson.v1.min.js"></script>
+
 		<script src="js/jquery-2.1.1.min.js"></script>
 		<script src="js/jquery-ui.min.js"></script>
-		<link rel="stylesheet" href="css/jquery-ui.min.css">
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+		<script src="js/jQRangeSlider/jQAllRangeSliders-withRuler-min.js"></script>
+		
+		<link rel="stylesheet" href="js/jquery/jquery-ui.css" type="text/css"/>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" type="text/css"/>
+		<link rel="stylesheet" href="js/jQRangeSlider/css/classic.css" type="text/css"/>
+		
 		<style>
 		p {
 			font-size: 1.5em;
 		}
 		
 		#title {
-			padding-bottom: 2em;
+			padding-bottom: 20px;
+		}
+		
+		#rangeSliderContainer {
+			padding-bottom: 10px;
 		}
 		
 		#map {
+			position: relative;
 			height: 600;
 			width: 960;
 		}
@@ -43,33 +56,42 @@
 	
 	<body>
 		<div class="container">
+			
 			<div id='title' class="row">
 				<h1>Soil Moisture by Level 3 Ecoregion</h1>
 			</div>
+			
 			<div class="row">
 				<div id='slider' class="col-xs-1"></div>
 				<div id='date' class="col-xs-1">
 					<p id='sliderDate'></p>
 				</div>
 			</div>
-			<div class="row">
-				<div id='map'>
+			
+			<div id="rangeSliderContainer">
+				<div id='rangeSlider'></div>
+			</div>
+			
+			<div id='map' class='row'>
 					<div id='ecoregions'></div>
 					<div id='terrain'></div>
-				</div>
 			</div>
+			
+			
 			
 		</div>
 		
 
 <script>
 
-//Initialize slider
+////////// Initialize Slider //////////
+
 $(document).ready(function() {
 	$('#slider').slider({value: 1000}).width(600).height(10);
 });
 
-//Setting map properties
+
+////////// Map Properties //////////
 
 //Define date format
 var format = d3.time.format("%b%d%Y");
@@ -91,6 +113,9 @@ var projection = d3.geo.azimuthalEqualArea()
 var path = d3.geo.path()
 	.projection(projection);
 
+
+////////// Ecoregion Thematic Data Color Scale //////////
+
 //Colors for high and low
 var dryColor = "#F4F2CF";
 var wetColor = "#0095BA";
@@ -99,6 +124,9 @@ var wetColor = "#0095BA";
 var color = d3.scale.linear().domain([3,26])
 			.range([dryColor, wetColor])
 			.interpolate(d3.interpolateHcl);
+
+
+////////// SVG Elements ////////////
 
 //Create SVG element for ecoregions data
 var svgEcoregions = d3.select("#ecoregions")
@@ -114,55 +142,34 @@ var svgTerrain = d3.select("#terrain")
 		.attr("width", w)
 		.attr("height", h);
 
-//Land that basemap
-d3.json("land.json", function(error, land) {
-	
-	var defs = svgTerrain.append("defs");
+ 
+ ////////// Soil Moisture CSV //////////
 
-	defs.append("path")
-		.datum(topojson.feature(land, land.objects.land))
-		.attr("id", "land")
-		.attr("d", path);
+ // Read in ecoregion daily means as var data
+ data = d3.csv("level3-mean.csv", function(data) {
 
-	svgTerrain.append("clipPath")
-		.attr("id", "clip")
-		.append("use")
-		.attr("xlink:href", "#land");
-
-	svgTerrain.append("image")
-		.attr("clip-path", "url(#clip)")
-		.attr("xlink:href", "hillshade.png")
-		.attr("width", w)
-		.attr("height", h)
-		.attr("opacity", 0.5).attr("comp-op","multiply");
-
-	svgTerrain.append("use")
- 		.attr("xlink:href", "#land");
-  });
-
-d3.select(self.frameElement).style("height", h + "px");
-
-						
-//Our soil moisture data
-data = d3.csv("level3-mean.csv", function(data) {
-
+	 // Show the data in the console
 	console.log(data);
 	
-	//Load in GeoJSON data
+	
+	////////// Ecoregion Thematic Data //////////
+	
+	// Read in level 3 ecoregion boundaries as var json
 	d3.json("level3-ecoregions.json", function(json) {
 	
+			// Initialize a slider value
 			sliderValue = 100;
 			
-			sliderDate = data[sliderValue].date;
+			// Put slider date into paragraph with id='sliderDate'
 			d3.select("#sliderDate").text("Date: " + data[sliderValue].date);
 		
-			//Find corresponding ecoregion within GeoJSON
+			// Find corresponding ecoregion within GeoJSON
 			for (var j = 0; j < json.features.length; j++) {
 				var jsonEcoregion = json.features[j].properties.NA_L3NAME;
 				json.features[j].properties.value = parseFloat(data[sliderValue][jsonEcoregion]);
 			};
 			
-			//Bind data and create one path per GeoJSON feature
+			// Bind data and create one path per GeoJSON feature
 			svgEcoregions.selectAll("path")
 				.data(json.features)
 				.enter()
@@ -179,14 +186,16 @@ data = d3.csv("level3-mean.csv", function(data) {
 				.style("stroke", "white")
 				.style("stroke-width", "0");
 			
+			// Define function to redraw ecoregion thematic data and update date based on parameter sliderValue
 			function refreshMap(sliderValue) {
 				
-				//Find corresponding ecoregion within GeoJSON
+				// Find corresponding ecoregion within GeoJSON
 				for (var j = 0; j < json.features.length; j++) {
 					var jsonEcoregion = json.features[j].properties.NA_L3NAME;
 					json.features[j].properties.value = parseFloat(data[sliderValue][jsonEcoregion]);
 				};
 				
+				// Change fill color of path based on new json.features.properties.value
 				svgEcoregions.selectAll("path")
 					.data(json.features)
 					.transition()
@@ -200,11 +209,13 @@ data = d3.csv("level3-mean.csv", function(data) {
 							}
 						});
 				
+				// Update #sliderDate paragraph text based on sliderValue
 				d3.select("#sliderDate").text("Date: " + data[sliderValue].date);
 			};
-	
+		
+		// Call refreshMap function with new sliderValue as parameter on slide
 		$(function() {
-			$('#slider').slider({ 	min: 365,
+			$('#slider').slider({ 	min: 0,
 						max: data.length,
 						slide: function( event, ui ) {
 							var sliderValue = ui.value;
@@ -212,13 +223,79 @@ data = d3.csv("level3-mean.csv", function(data) {
 						} 
 			});
 		});
+		
+		// Initialize range slider
+		$("#rangeSlider").rangeSlider({
+			bounds: {min: 0, max: data.length},
+			defaultValues:{min: 365, max: 395},
+			range: {min: 30, max: 365},
+			valueLabels: "change",
+			durationIn: 150,
+			durationOut: 150
+		});
+		
+		var bounds = $("#rangeSlider").rangeSlider("option", "bounds");
+		console.log(bounds);
+		
+		function calculateMean() {
+			var min = bounds.min;
+			var max = bounds.max;
+		
+			// Looping through each ecoregion...
+			for (var j = 0; j < json.features.length; j++) {
+				var jsonEcoregion = json.features[j].properties.NA_L3NAME;
+			
+				// Do the following for each ecoregion...
+				data[i][jsonEcoregion]
+				
+				// Assign a new value for each ecoregion
+				json.features[j].properties.value = parseFloat(data[sliderValue][jsonEcoregion]);
+			
+				
+				
+				
+			}; // END looping through each ecoregion
+			
+		}; //END calculate mean function
+		
+	}); // END level 3 ecoregion boundaries
 	
-	});
-});
+}); // END ecoregion daily means data
+
+
+////////// Base Map //////////
+
+//Land that basemap and bring the terrain
+d3.json("land.json", function(error, land) {
+	
+	var defs = svgTerrain.append("defs");
+
+	//Bring in the land
+	defs.append("path")
+		.datum(topojson.feature(land, land.objects.land))
+		.attr("id", "land")
+		.attr("d", path);
+
+	//Identify a clipping path
+	svgTerrain.append("clipPath")
+		.attr("id", "clip")
+		.append("use")
+		.attr("xlink:href", "#land");
+
+	//Overlay terrain
+	svgTerrain.append("image")
+		.attr("clip-path", "url(#clip)")
+		.attr("xlink:href", "hillshade.png")
+		.attr("width", w)
+		.attr("height", h)
+		.attr("opacity", 0.5).attr("comp-op","multiply");
+
+	svgTerrain.append("use")
+		.attr("xlink:href", "#land");
+}); // END base map
 
 
 
-
-		</script>
+</script>
 	</body>
 	</html>
