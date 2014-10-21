@@ -59,17 +59,21 @@
 			
 			<div id='title' class="row">
 				<h1>Soil Moisture by Level 3 Ecoregion</h1>
+				<h3>Change these sliders to update the map...</h3>
 			</div>
 			
 			<div class="row">
+				<p>This slider will update the map with daily soil moisture levels.</p>
 				<div id='slider' class="col-xs-1"></div>
 				<div id='date' class="col-xs-1">
 					<p id='sliderDate'></p>
 				</div>
 			</div>
 			
-			<div id="rangeSliderContainer">
-				<div id='rangeSlider'></div>
+			<div class="row">
+				<p>This slider will update the map with the average soil moisture level over a range of dates.</p>
+				<div id="rangeSliderContainer">
+					<div id='rangeSlider'></div>
 			</div>
 			
 			<div id='map' class='row'>
@@ -117,13 +121,17 @@ var path = d3.geo.path()
 ////////// Ecoregion Thematic Data Color Scale //////////
 
 //Colors for high and low
-var dryColor = "#F4F2CF";
-var wetColor = "#0095BA";
+var dryColor = "#FFD6A3";
+var stepColorOne = "#FFFFD4";
+var stepColorTwo = "#B9E8A2";
+var stepColorThree = "#7DC9A9";
+var stepColorFour = "#2F5E99";
+var wetColor = "#51468F";
 
 //Scale takes data values as input and returns color
-var color = d3.scale.linear().domain([10,18])
-			.range([dryColor, wetColor])
-			.interpolate(d3.interpolateHcl);
+var color = d3.scale.linear().domain([6, 10, 12, 14, 20, 30])
+.range([dryColor, stepColorOne, stepColorTwo, stepColorThree, stepColorFour, wetColor])
+.interpolate(d3.interpolateHcl);
 
 
 ////////// SVG Elements ////////////
@@ -160,6 +168,17 @@ var svgTerrain = d3.select("#terrain")
 			// Initialize a slider value
 			sliderValue = 100;
 			
+			// Initialize range slider
+			$("#rangeSlider").rangeSlider({
+				bounds: {min: 0, max: data.length},
+				defaultValues:{min: 365, max: 455},
+				range: {min: 7, max: data.length},
+				step: 1,
+				valueLabels: "change",
+				durationIn: 150,
+				durationOut: 150
+			});
+			
 			// Put slider date into paragraph with id='sliderDate'
 			d3.select("#sliderDate").text("Date: " + data[sliderValue].date);
 		
@@ -184,7 +203,7 @@ var svgTerrain = d3.select("#terrain")
 							}
 				})
 				.style("stroke", "white")
-				.style("stroke-width", "0");
+				.style("stroke-width", "1");
 			
 			// Define function to redraw ecoregion thematic data and update date based on parameter sliderValue
 			function refreshMap(sliderValue) {
@@ -222,17 +241,6 @@ var svgTerrain = d3.select("#terrain")
 							refreshMap(sliderValue);
 						} 
 			});
-		});
-		
-		// Initialize range slider
-		$("#rangeSlider").rangeSlider({
-			bounds: {min: 0, max: data.length},
-			defaultValues:{min: 365, max: 395},
-			range: {min: 30, max: 365},
-			step: 1,
-			valueLabels: "change",
-			durationIn: 150,
-			durationOut: 150
 		});
 		
 		// Utilize rangeSlider to dynamically calculate averages and then recolor map
@@ -328,15 +336,15 @@ d3.json("land.json", function(error, land) {
 	//Overlay terrain
 	svgTerrain.append("image")
 		.attr("clip-path", "url(#clip)")
-		.attr("xlink:href", "hillshade.png")
+		.attr("xlink:href", "hillshade-semitransparent3.png")
 		.attr("width", w)
 		.attr("height", h)
-		.attr("opacity", 0.5).attr("comp-op","multiply");
+		.attr("opacity", 0.9).attr("comp-op","multiply");
 
 	svgTerrain.append("use")
 		.attr("xlink:href", "#land");
 }); // END base map
-
+//*/
 
 
 </script>
