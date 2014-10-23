@@ -336,10 +336,10 @@ d3.json("land.json", function(error, land) {
 	//Overlay terrain
 	svgTerrain.append("image")
 		.attr("clip-path", "url(#clip)")
-		.attr("xlink:href", "hillshade-semitransparent3.png")
+		.attr("xlink:href", "hillshade.png")
 		.attr("width", w)
 		.attr("height", h)
-		.attr("opacity", 0.9).attr("comp-op","multiply");
+		.attr("opacity", 0.4).attr("comp-op","multiply");
 
 	svgTerrain.append("use")
 		.attr("xlink:href", "#land");
