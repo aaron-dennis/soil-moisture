@@ -118,4 +118,4 @@ makeMaps <- function(list) {
 makeMaps(tif.files)
 
 # Compile maps into video, depends on ffmpeg installation
-system("ffmpeg -framerate 20 -i /Users/aarondennis/Desktop/SoilMoisturePlots/map%04d.png /Users/aarondennis/Desktop/Soil_Moisture.mp4")
+system("ffmpeg -framerate 20 -i ~/Desktop/SoilMoisturePlots/map%04d.png ~/Desktop/Soil_Moisture.mp4")
